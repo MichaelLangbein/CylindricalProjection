@@ -40,10 +40,11 @@ void main() {
   if (posWordSpace.z > 0.0) {
     theta = asin(posWordSpace.x / d);
   } else {
-    theta = M_PI - asin(posWordSpace.x / d);
+    float thetaMax = M_PI;
     if (posWordSpace.x < 0.0) {
-      theta = -1.0 * theta;
+      thetaMax = -1.0 * thetaMax;
     }
+    theta = thetaMax - asin(posWordSpace.x / d);
   }
 
   float rho = asin(posWordSpace.y / d);

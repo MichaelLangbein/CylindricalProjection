@@ -26,9 +26,10 @@ def project(posWorldSpace):
     if posWorldSpace[2] > 0.0:
         theta = np.arcsin(posWorldSpace[0] / d)
     else:
-        theta = np.pi - np.arcsin(posWorldSpace[0] / d)
+        thetaMax = np.pi
         if posWorldSpace[0] < 0.0:
-            theta = -theta
+            thetaMax = -np.pi
+        theta = thetaMax - np.arcsin(posWorldSpace[0] / d)
 
     rho = np.arcsin(posWorldSpace[1] / d)
 
