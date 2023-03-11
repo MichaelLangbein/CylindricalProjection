@@ -1,4 +1,4 @@
-import { BackSide, BoxGeometry, CubeCamera, DoubleSide, Mesh, MeshBasicMaterial, MeshPhongMaterial, OrthographicCamera, PerspectiveCamera, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
+import { BoxGeometry, Camera, DoubleSide, Mesh, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -11,7 +11,7 @@ const renderer = new WebGLRenderer({
   canvas: canvas
 });
 
-const camera = new PerspectiveCamera(50, canvas.width / canvas.height, 0.01, 10000); // new OrthographicCamera(-3, 3, 3, -3, 0.01, 1000) // new CubeCamera(0.01, 1000, canvas) // new PerspectiveCamera(120, canvas.width / canvas.height, 0.01, 10000);
+const camera = new Camera(); // new PerspectiveCamera(50, canvas.width / canvas.height, 0.01, 10000); // new OrthographicCamera(-3, 3, 3, -3, 0.01, 1000) // new CubeCamera(0.01, 1000, canvas) // new PerspectiveCamera(120, canvas.width / canvas.height, 0.01, 10000);
 camera.position.set(0, 0, 0);
 camera.lookAt(new Vector3(0, 0, 1));
 
@@ -26,15 +26,33 @@ varying vec2 vUV;
 #define M_PI 3.1415926535897932384626433832795
 
 void main() {
-  vUV = uv;
-  gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4( position, 1.0 );
+  float r = 0.3;
+  float h = 0.6;
+  float dmin = r;
+  float dmax = 100.0;
 
-  float x = gl_Position.x;
+  vUV = uv;
+  vec4 posWordSpace = modelMatrix * vec4( position, 1.0 );
+
   float d = length(gl_Position);
-  float theta = asin(x / d);  // in range [-pi/2, pi/2]
+
+  float theta = 0.0;
+  if (posWordSpace.z > 0.0) {
+    theta = asin(posWordSpace.x / d);
+  } else {
+    theta = M_PI - asin(posWordSpace.x / d);
+    if (posWordSpace.x < 0.0) {
+      theta = -1.0 * theta;
+    }
+  }
+
+  float rho = asin(posWordSpace.y / d);
+
   float xNew = theta / M_PI;
-  // gl_Position.x = xNew;
-  // gl_Position.z = d;
+  float yNew = (r * tan(rho)) / h;
+  float zNew = (d - dmin) / (dmax - dmin);
+
+  gl_Position = vec4(xNew, yNew, zNew, 1.0);
 }
 `;
 
