@@ -1,5 +1,4 @@
-import { BoxGeometry, Camera, DoubleSide, Mesh, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { BoxGeometry, Camera, DoubleSide, Mesh, PerspectiveCamera, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 canvas.width = canvas.clientWidth;
@@ -11,13 +10,11 @@ const renderer = new WebGLRenderer({
   canvas: canvas
 });
 
-const camera = new Camera(); // new PerspectiveCamera(50, canvas.width / canvas.height, 0.01, 10000); // new OrthographicCamera(-3, 3, 3, -3, 0.01, 1000) // new CubeCamera(0.01, 1000, canvas) // new PerspectiveCamera(120, canvas.width / canvas.height, 0.01, 10000);
+const camera = new PerspectiveCamera(50, canvas.width / canvas.height, 0.01, 10000); // new OrthographicCamera(-3, 3, 3, -3, 0.01, 1000) // new CubeCamera(0.01, 1000, canvas) // new PerspectiveCamera(120, canvas.width / canvas.height, 0.01, 10000);
 camera.position.set(0, 0, 0);
 camera.lookAt(new Vector3(0, 0, 1));
 
 const scene = new Scene();
-
-const controls = new OrbitControls(camera, renderer.domElement);
 
 
 
@@ -82,12 +79,6 @@ const skyboxMaterials = [
   new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_ny } }, side: DoubleSide }),
   new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_pz } }, side: DoubleSide }),
   new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_nz } }, side: DoubleSide }),
-  // new MeshBasicMaterial({ map: texture_px, side: DoubleSide }),
-  // new MeshBasicMaterial({ map: texture_nx, side: DoubleSide }),
-  // new MeshBasicMaterial({ map: texture_py, side: DoubleSide }),
-  // new MeshBasicMaterial({ map: texture_ny, side: DoubleSide }),
-  // new MeshBasicMaterial({ map: texture_pz, side: DoubleSide }),
-  // new MeshBasicMaterial({ map: texture_nz, side: DoubleSide }),
 ]
 const skybox = new Mesh(skyboxGeometry, skyboxMaterials);
 skybox.position.set(0, 0, 0);
@@ -99,7 +90,6 @@ scene.add(skybox);
 function loop() {
   skybox.rotateY(0.003);
   renderer.render(scene, camera);
-  controls.update();
 
   setTimeout(loop, 10);
 }
