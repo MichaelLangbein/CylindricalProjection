@@ -58,44 +58,52 @@ assert(proj[0] < -0.99)
 
 #%% creating sample data
 
-# far wall
-a = [-2,  2,  4]
-b = [ 2,  2,  4]
-c = [ 2, -2,  4]
-d = [-2, -2,  4]
+def createBox(x, y, z, width, height, depth):
+    # far wall
+    a = [x-width/2, y+height/2, z+depth/2]
+    b = [x+width/2, y+height/2, z+depth/2]
+    c = [x+width/2, y-height/2, z+depth/2]
+    d = [x-width/2, y-height/2, z+depth/2]
+    # near wall
+    e = [x-width/2, y+height/2, z-depth/2]
+    f = [x+width/2, y+height/2, z-depth/2]
+    g = [x+width/2, y-height/2, z-depth/2]
+    h = [x-width/2, y-height/2, z-depth/2]
 
-# near wall
-e = [-2,  2, -4]
-f = [ 2,  2, -4]
-g = [ 2, -2, -4]
-h = [-2, -2, -4]
+    # connecting far wall
+    ab = np.linspace(a, b, 10)
+    bc = np.linspace(b, c, 10)
+    cd = np.linspace(c, d, 10)
+    da = np.linspace(d, a, 10)
+    # connecting near wall
+    ef = np.linspace(e, f, 10)
+    fg = np.linspace(f, g, 10)
+    gh = np.linspace(g, h, 10)
+    he = np.linspace(h, e, 10)
+    # connecting near wall with far wall
+    ae = np.linspace(a, e, 10)
+    bf = np.linspace(b, f, 10)
+    cg = np.linspace(c, g, 10)
+    dh = np.linspace(d, h, 10)
 
-# connecting far wall
-ab = np.linspace(a, b, 10)
-bc = np.linspace(b, c, 10)
-cd = np.linspace(c, d, 10)
-da = np.linspace(d, a, 10)
+    samples = np.concatenate((ab, bc, cd, da, ef, fg, gh, he, ae, bf, cg, dh))
+    return samples
 
-# connecting near wall
-ef = np.linspace(e, f, 10)
-fg = np.linspace(f, g, 10)
-gh = np.linspace(g, h, 10)
-he = np.linspace(h, e, 10)
+def projectAll(points):
+    projected = []
+    for point in points:
+        projected.append(project(point))
+    projected = np.array(projected)
+    return projected
 
-# connecting near wall with far wall
-ae = np.linspace(a, e, 10)
-bf = np.linspace(b, f, 10)
-cg = np.linspace(c, g, 10)
-dh = np.linspace(d, h, 10)
+#%% projecting samples
+samplesRoom = createBox(0, 0, 0, 2, 1, 4)
+roomProjected = projectAll(samplesRoom)
+samplesBox = createBox(0.5, 0.0, 0.5, 0.2, 0.2, 0.2)
+boxProjected = projectAll(samplesBox)
 
-samples = np.concatenate((ab, bc, cd, da, ef, fg, gh, he, ae, bf, cg, dh))
-
-# projecting samples
-projected = []
-for point in samples:
-    projected.append(project(point))
-projected = np.array(projected)
 
 #%% plotting
-plt.scatter(projected[:, 0], projected[:, 1])
+plt.scatter(roomProjected[:, 0], roomProjected[:, 1])
+plt.scatter(boxProjected[:, 0], boxProjected[:, 1])
 # %%
