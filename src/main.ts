@@ -1,4 +1,6 @@
 import { BoxGeometry, Camera, DoubleSide, Mesh, PerspectiveCamera, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
+import { AxesHelper } from 'three/src/helpers/AxesHelper';
+
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 canvas.width = canvas.clientWidth;
@@ -16,10 +18,14 @@ camera.lookAt(new Vector3(0, 0, 1));
 
 const scene = new Scene();
 
+const axh = new AxesHelper(10);
+axh.position.set(0, 0, 1);
+scene.add(axh);
 
 
 export const vertex = /* glsl */`
 varying vec2 vUV;
+varying vec3 debug;
 #define M_PI 3.1415926535897932384626433832795
 
 void main() {
@@ -31,7 +37,11 @@ void main() {
   vUV = uv;
   vec4 posWordSpace = modelMatrix * vec4( position, 1.0 );
 
-  float d = length(gl_Position);
+  float d = sqrt(
+    posWordSpace.x * posWordSpace.x + 
+    posWordSpace.y * posWordSpace.y + 
+    posWordSpace.z * posWordSpace.z
+  );
 
   float theta = 0.0;
   if (posWordSpace.z > 0.0) {
@@ -51,15 +61,23 @@ void main() {
   float zNew = (d - dmin) / (dmax - dmin);
 
   gl_Position = vec4(xNew, yNew, zNew, 1.0);
+  debug = vec3(xNew, yNew, zNew);
+
+  // gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4( position, 1.0 );
 }
 `;
 
 const fragment = /* glsl */`
 uniform sampler2D tex;
 varying vec2 vUV;
+varying vec3 debug;
+
 void main() {
   vec4 texColor = texture2D(tex, vUV);
   gl_FragColor = vec4(texColor.rgb, 1.0);
+  // gl_FragColor = vec4(debug.xyz, 1.0);
+  // gl_FragColor = vec4(vUV.xy, debug.x, 1.0);
+  // gl_FragColor = vec4((debug.x / 20.0) * (debug.x / 20.0), 0.0, 0.0, 1.0);
 }`;
 
 
