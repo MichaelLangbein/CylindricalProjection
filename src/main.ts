@@ -1,4 +1,4 @@
-import { AmbientLight, BoxGeometry, Camera, DoubleSide, Mesh, MeshPhongMaterial, PerspectiveCamera, PointLight, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
+import { BoxGeometry, Camera, DoubleSide, Mesh, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
 import { AxesHelper } from 'three/src/helpers/AxesHelper';
 
 
@@ -7,30 +7,20 @@ canvas.width = canvas.clientWidth;
 canvas.height = canvas.clientHeight;
 
 const renderer = new WebGLRenderer({
-  alpha: true,
+  alpha: false,
   antialias: true,
   canvas: canvas
 });
 
-const camera = new PerspectiveCamera(50, canvas.width / canvas.height, 0.01, 10000); // new OrthographicCamera(-3, 3, 3, -3, 0.01, 1000) // new CubeCamera(0.01, 1000, canvas) // new PerspectiveCamera(120, canvas.width / canvas.height, 0.01, 10000);
+const camera = new Camera(); // new PerspectiveCamera(50, canvas.width / canvas.height, 0.01, 10000); // new OrthographicCamera(-3, 3, 3, -3, 0.01, 1000) // new CubeCamera(0.01, 1000, canvas) // new PerspectiveCamera(120, canvas.width / canvas.height, 0.01, 10000);
 camera.position.set(0, 0, 0);
 camera.lookAt(new Vector3(0, 0, 1));
 
 const scene = new Scene();
 
-const axh = new AxesHelper(10);
-axh.position.set(0, 0, 1);
+const axh = new AxesHelper(5);
+axh.position.set(0, 0, 0);
 scene.add(axh);
-
-const cube = new Mesh(new BoxGeometry(1, 1, 1), new MeshPhongMaterial({ color: 'red' }));
-cube.position.set(0, 0, 3);
-scene.add(cube);
-
-const light = new AmbientLight('white', 0.2);
-scene.add(light);
-const secndLight = new PointLight();
-secndLight.position.set(0, 10, 0);
-scene.add(secndLight);
 
 
 export const vertex = /* glsl */`
@@ -45,7 +35,7 @@ void main() {
   float dmax = 100.0;
 
   vUV = uv;
-  vec4 posWordSpace = modelMatrix * vec4( position, 1.0 );
+  vec4 posWordSpace = viewMatrix * modelMatrix * vec4( position, 1.0 );
 
   float d = sqrt(
     posWordSpace.x * posWordSpace.x + 
@@ -87,7 +77,6 @@ void main() {
   gl_FragColor = vec4(texColor.rgb, 1.0);
   // gl_FragColor = vec4(debug.xyz, 1.0);
   // gl_FragColor = vec4(vUV.xy, debug.x, 1.0);
-  // gl_FragColor = vec4((debug.x / 20.0) * (debug.x / 20.0), 0.0, 0.0, 1.0);
 }`;
 
 
@@ -98,25 +87,67 @@ const texture_nz = await new TextureLoader().loadAsync('./indoors-skyboxes/Dalla
 const texture_px = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/posx.jpg');
 const texture_py = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/posy.jpg');
 const texture_pz = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/posz.jpg');
+const textureFace = await new TextureLoader().loadAsync('./indexed-face.png');
+const lowRes = await new TextureLoader().loadAsync('./low-res.png');
+
+
 
 const skyboxGeometry = new BoxGeometry(10, 10, 10);
 const skyboxMaterials = [
-  new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_px } }, side: DoubleSide }),
-  new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_nx } }, side: DoubleSide }),
-  new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_py } }, side: DoubleSide }),
-  new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_ny } }, side: DoubleSide }),
-  new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_pz } }, side: DoubleSide }),
-  new ShaderMaterial({ vertexShader: vertex, fragmentShader: fragment, uniforms: { 'tex': { value: texture_nz } }, side: DoubleSide }),
+  new ShaderMaterial({ 
+    vertexShader: vertex, fragmentShader: fragment, 
+    uniforms: { 'tex': { value: textureFace } },    // texture_px } }, 
+    side: DoubleSide 
+  }),
+  new ShaderMaterial({ 
+    vertexShader: vertex, fragmentShader: fragment, 
+    uniforms: { 'tex': { value: textureFace } },    // texture_nx } }, 
+    side: DoubleSide 
+  }),
+  new ShaderMaterial({ 
+    vertexShader: vertex, fragmentShader: fragment, 
+    uniforms: { 'tex': { value: textureFace } },    // texture_py } }, 
+    side: DoubleSide 
+  }),
+  new ShaderMaterial({ 
+    vertexShader: vertex, fragmentShader: fragment, 
+    uniforms: { 'tex': { value: textureFace } },    // texture_ny } }, 
+    side: DoubleSide 
+  }),
+  new ShaderMaterial({ 
+    vertexShader: vertex, fragmentShader: fragment, 
+    uniforms: { 'tex': { value: textureFace } },    // texture_pz } }, 
+    side: DoubleSide 
+  }),
+  new ShaderMaterial({ 
+    vertexShader: vertex, fragmentShader: fragment, 
+    uniforms: { 'tex': { value: textureFace } },    // texture_nz } }, 
+    side: DoubleSide 
+  }),
 ]
 const skybox = new Mesh(skyboxGeometry, skyboxMaterials);
 skybox.position.set(0, 0, 0);
 scene.add(skybox);
 
 
+const cube = new Mesh(
+  new BoxGeometry(1, 1, 1), 
+  new ShaderMaterial({ 
+    vertexShader: vertex,
+    fragmentShader: fragment,
+    uniforms: { 'tex': {value: lowRes} }, 
+    side: DoubleSide
+  }));
+cube.position.set(0, 0, 1.5);
+scene.add(cube);
+
+
+
 
 
 function loop() {
-  skybox.rotateY(0.003);
+  // skybox.rotateY(0.003);
+  // camera.rotateY(0.002);
   cube.rotateX(0.003);
   renderer.render(scene, camera);
 
