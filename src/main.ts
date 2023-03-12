@@ -1,6 +1,5 @@
-import { BoxGeometry, Camera, DoubleSide, Mesh, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
-import { AxesHelper } from 'three/src/helpers/AxesHelper';
-
+import { BoxGeometry, Camera, DoubleSide, Mesh, PlaneGeometry, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 canvas.width = canvas.clientWidth;
@@ -18,10 +17,7 @@ camera.lookAt(new Vector3(0, 0, 1));
 
 const scene = new Scene();
 
-const axh = new AxesHelper(5);
-axh.position.set(0, 0, 0);
-scene.add(axh);
-
+// const controls = new OrbitControls(camera, renderer.domElement);
 
 export const vertex = /* glsl */`
 varying vec2 vUV;
@@ -35,26 +31,26 @@ void main() {
   float dmax = 100.0;
 
   vUV = uv;
-  vec4 posWordSpace = viewMatrix * modelMatrix * vec4( position, 1.0 );
+  vec4 posCamSpace = viewMatrix * modelMatrix * vec4( position, 1.0 );
 
   float d = sqrt(
-    posWordSpace.x * posWordSpace.x + 
-    posWordSpace.y * posWordSpace.y + 
-    posWordSpace.z * posWordSpace.z
+    (posCamSpace.x * posCamSpace.x) + 
+    (posCamSpace.y * posCamSpace.y) + 
+    (posCamSpace.z * posCamSpace.z)
   );
 
   float theta = 0.0;
-  if (posWordSpace.z > 0.0) {
-    theta = asin(posWordSpace.x / d);
+  if (posCamSpace.z > 0.0) {
+    theta = asin(posCamSpace.x / d);
   } else {
     float thetaMax = M_PI;
-    if (posWordSpace.x < 0.0) {
+    if (posCamSpace.x < 0.0) {
       thetaMax = -1.0 * thetaMax;
     }
-    theta = thetaMax - asin(posWordSpace.x / d);
+    theta = thetaMax - asin(posCamSpace.x / d);
   }
 
-  float rho = asin(posWordSpace.y / d);
+  float rho = asin(posCamSpace.y / d);
 
   float xNew = theta / M_PI;
   float yNew = (r * tan(rho)) / h;
@@ -62,8 +58,7 @@ void main() {
 
   gl_Position = vec4(xNew, yNew, zNew, 1.0);
   debug = vec3(xNew, yNew, zNew);
-
-  // gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4( position, 1.0 );
+  debug = posCamSpace.xyz;
 }
 `;
 
@@ -92,42 +87,53 @@ const lowRes = await new TextureLoader().loadAsync('./low-res.png');
 
 
 
-const skyboxGeometry = new BoxGeometry(10, 10, 10);
-const skyboxMaterials = [
-  new ShaderMaterial({ 
-    vertexShader: vertex, fragmentShader: fragment, 
-    uniforms: { 'tex': { value: textureFace } },    // texture_px } }, 
-    side: DoubleSide 
-  }),
-  new ShaderMaterial({ 
-    vertexShader: vertex, fragmentShader: fragment, 
-    uniforms: { 'tex': { value: textureFace } },    // texture_nx } }, 
-    side: DoubleSide 
-  }),
-  new ShaderMaterial({ 
-    vertexShader: vertex, fragmentShader: fragment, 
-    uniforms: { 'tex': { value: textureFace } },    // texture_py } }, 
-    side: DoubleSide 
-  }),
-  new ShaderMaterial({ 
-    vertexShader: vertex, fragmentShader: fragment, 
-    uniforms: { 'tex': { value: textureFace } },    // texture_ny } }, 
-    side: DoubleSide 
-  }),
-  new ShaderMaterial({ 
-    vertexShader: vertex, fragmentShader: fragment, 
-    uniforms: { 'tex': { value: textureFace } },    // texture_pz } }, 
-    side: DoubleSide 
-  }),
-  new ShaderMaterial({ 
-    vertexShader: vertex, fragmentShader: fragment, 
-    uniforms: { 'tex': { value: textureFace } },    // texture_nz } }, 
-    side: DoubleSide 
-  }),
-]
-const skybox = new Mesh(skyboxGeometry, skyboxMaterials);
-skybox.position.set(0, 0, 0);
-scene.add(skybox);
+// const skyboxGeometry = new BoxGeometry(10, 2, 15);
+// const skyboxMaterials = [
+//   new ShaderMaterial({ 
+//     vertexShader: vertex, fragmentShader: fragment, 
+//     uniforms: { 'tex': { value: textureFace } },    // texture_px } }, 
+//     side: DoubleSide 
+//   }),
+//   new ShaderMaterial({ 
+//     vertexShader: vertex, fragmentShader: fragment, 
+//     uniforms: { 'tex': { value: textureFace } },    // texture_nx } }, 
+//     side: DoubleSide 
+//   }),
+//   new ShaderMaterial({ 
+//     vertexShader: vertex, fragmentShader: fragment, 
+//     uniforms: { 'tex': { value: textureFace } },    // texture_py } }, 
+//     side: DoubleSide 
+//   }),
+//   new ShaderMaterial({ 
+//     vertexShader: vertex, fragmentShader: fragment, 
+//     uniforms: { 'tex': { value: textureFace } },    // texture_ny } }, 
+//     side: DoubleSide 
+//   }),
+//   new ShaderMaterial({ 
+//     vertexShader: vertex, fragmentShader: fragment, 
+//     uniforms: { 'tex': { value: textureFace } },    // texture_pz } }, 
+//     side: DoubleSide 
+//   }),
+//   new ShaderMaterial({ 
+//     vertexShader: vertex, fragmentShader: fragment, 
+//     uniforms: { 'tex': { value: textureFace } },    // texture_nz } }, 
+//     side: DoubleSide 
+//   }),
+// ]
+// const skybox = new Mesh(skyboxGeometry, skyboxMaterials);
+// skybox.position.set(0, 0, 0);
+// scene.add(skybox);
+
+const plane1 = new Mesh(
+  new PlaneGeometry(5, 3),
+  new ShaderMaterial({
+    vertexShader: vertex, fragmentShader: fragment,
+    uniforms: { 'tex': {value: textureFace}},
+    side: DoubleSide
+  })
+);
+plane1.position.set(0, 0, 3);
+scene.add(plane1);
 
 
 const cube = new Mesh(
@@ -138,8 +144,8 @@ const cube = new Mesh(
     uniforms: { 'tex': {value: lowRes} }, 
     side: DoubleSide
   }));
-cube.position.set(0, 0, 1.5);
-scene.add(cube);
+cube.position.set(0.5, 0, 1.5);
+// scene.add(cube);
 
 
 
