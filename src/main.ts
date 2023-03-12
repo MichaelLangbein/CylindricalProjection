@@ -1,4 +1,4 @@
-import { BoxGeometry, Camera, DoubleSide, Mesh, PerspectiveCamera, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, BoxGeometry, Camera, DoubleSide, Mesh, MeshPhongMaterial, PerspectiveCamera, PointLight, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
 import { AxesHelper } from 'three/src/helpers/AxesHelper';
 
 
@@ -21,6 +21,16 @@ const scene = new Scene();
 const axh = new AxesHelper(10);
 axh.position.set(0, 0, 1);
 scene.add(axh);
+
+const cube = new Mesh(new BoxGeometry(1, 1, 1), new MeshPhongMaterial({ color: 'red' }));
+cube.position.set(0, 0, 3);
+scene.add(cube);
+
+const light = new AmbientLight('white', 0.2);
+scene.add(light);
+const secndLight = new PointLight();
+secndLight.position.set(0, 10, 0);
+scene.add(secndLight);
 
 
 export const vertex = /* glsl */`
@@ -107,6 +117,7 @@ scene.add(skybox);
 
 function loop() {
   skybox.rotateY(0.003);
+  cube.rotateX(0.003);
   renderer.render(scene, camera);
 
   setTimeout(loop, 10);
