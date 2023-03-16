@@ -19,6 +19,8 @@ const scene = new Scene();
 
 // const controls = new OrbitControls(camera, renderer.domElement);
 
+
+
 export const vertex = /* glsl */`
 varying vec2 vUV;
 varying vec3 debug;
@@ -31,26 +33,35 @@ void main() {
   float dmax = 100.0;
 
   vUV = uv;
-  vec4 posCamSpace = viewMatrix * modelMatrix * vec4( position, 1.0 );
+  vec4 posCamSpace = viewMatrix * modelMatrix * vec4( position, 1.0 );   // verified
+  posCamSpace.z = - posCamSpace.z; // usually, camera looks into negative z direction in camera space. changing that.
 
-  float d = sqrt(
-    (posCamSpace.x * posCamSpace.x) + 
+  float d = sqrt(                              // verified
+    (posCamSpace.x * posCamSpace.x) +  
     (posCamSpace.y * posCamSpace.y) + 
     (posCamSpace.z * posCamSpace.z)
+  );
+  float d_xz = sqrt(                          // verified
+    (posCamSpace.x * posCamSpace.x) + 
+    (posCamSpace.z * posCamSpace.z)
+  );
+  float d_xy = sqrt(                            // verified
+    (posCamSpace.x * posCamSpace.x) + 
+    (posCamSpace.y * posCamSpace.y)
   );
 
   float theta = 0.0;
   if (posCamSpace.z > 0.0) {
-    theta = asin(posCamSpace.x / d);
+    theta = asin(posCamSpace.x / d_xz);      // verified
   } else {
-    float thetaMax = M_PI;
+    float thetaMax = M_PI;                 // ...............
     if (posCamSpace.x < 0.0) {
-      thetaMax = -1.0 * thetaMax;
+      thetaMax = -1.0 * thetaMax;          // ....................
     }
-    theta = thetaMax - asin(posCamSpace.x / d);
+    theta = thetaMax - asin(posCamSpace.x / d_xz);    // .................
   }
 
-  float rho = asin(posCamSpace.y / d);
+  float rho = asin(posCamSpace.y / d_xy);
 
   float xNew = theta / M_PI;
   float yNew = (r * tan(rho)) / h;
@@ -58,7 +69,8 @@ void main() {
 
   gl_Position = vec4(xNew, yNew, zNew, 1.0);
   debug = vec3(xNew, yNew, zNew);
-  debug = posCamSpace.xyz;
+  debug = vec3(abs(theta) / M_PI, abs(theta) / M_PI, abs(theta) / M_PI);
+  debug = vec3(abs(rho), abs(rho), abs(rho));
 }
 `;
 
@@ -125,15 +137,50 @@ const lowRes = await new TextureLoader().loadAsync('./low-res.png');
 // scene.add(skybox);
 
 const plane1 = new Mesh(
-  new PlaneGeometry(5, 3),
+  new PlaneGeometry(1, 1, 64, 32),
   new ShaderMaterial({
     vertexShader: vertex, fragmentShader: fragment,
     uniforms: { 'tex': {value: textureFace}},
     side: DoubleSide
   })
 );
-plane1.position.set(0, 0, 3);
+plane1.position.set(0, 0, 1);
+plane1.lookAt(new Vector3(0, 0, 0));
 scene.add(plane1);
+const plane2 = new Mesh(
+  new PlaneGeometry(1, 1, 64, 32),
+  new ShaderMaterial({
+    vertexShader: vertex, fragmentShader: fragment,
+    uniforms: { 'tex': {value: textureFace}},
+    side: DoubleSide
+  })
+);
+plane2.position.set(1, 0, 0);
+plane2.lookAt(new Vector3(0, 0, 0));
+scene.add(plane2);
+const plane3 = new Mesh(
+  new PlaneGeometry(1, 1, 64, 32),
+  new ShaderMaterial({
+    vertexShader: vertex, fragmentShader: fragment,
+    uniforms: { 'tex': {value: textureFace}},
+    side: DoubleSide
+  })
+);
+plane3.position.set(-1, 0, 0);
+plane3.lookAt(new Vector3(0, 0, 0));
+scene.add(plane3);
+const plane4 = new Mesh(
+  new PlaneGeometry(1, 1, 64, 32),
+  new ShaderMaterial({
+    vertexShader: vertex, fragmentShader: fragment,
+    uniforms: { 'tex': {value: textureFace}},
+    side: DoubleSide
+  })
+);
+plane4.position.set(0, 0, -1);
+plane4.lookAt(new Vector3(0, 0, 0));
+scene.add(plane4);
+
 
 
 const cube = new Mesh(
