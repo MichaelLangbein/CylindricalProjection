@@ -33,35 +33,31 @@ void main() {
   float dmax = 100.0;
 
   vUV = uv;
-  vec4 posCamSpace = viewMatrix * modelMatrix * vec4( position, 1.0 );   // verified
+  vec4 posCamSpace = viewMatrix * modelMatrix * vec4( position, 1.0 );
   posCamSpace.z = - posCamSpace.z; // usually, camera looks into negative z direction in camera space. changing that.
 
-  float d = sqrt(                              // verified
+  float d = sqrt(
     (posCamSpace.x * posCamSpace.x) +  
     (posCamSpace.y * posCamSpace.y) + 
     (posCamSpace.z * posCamSpace.z)
   );
-  float d_xz = sqrt(                          // verified
+  float d_xz = sqrt(
     (posCamSpace.x * posCamSpace.x) + 
     (posCamSpace.z * posCamSpace.z)
-  );
-  float d_xy = sqrt(                            // verified
-    (posCamSpace.x * posCamSpace.x) + 
-    (posCamSpace.y * posCamSpace.y)
   );
 
   float theta = 0.0;
   if (posCamSpace.z > 0.0) {
-    theta = asin(posCamSpace.x / d_xz);      // verified
+    theta = asin(posCamSpace.x / d_xz);
   } else {
-    float thetaMax = M_PI;                 // ...............
+    float thetaMax = M_PI;
     if (posCamSpace.x < 0.0) {
-      thetaMax = -1.0 * thetaMax;          // ....................
+      thetaMax = -1.0 * thetaMax;
     }
-    theta = thetaMax - asin(posCamSpace.x / d_xz);    // .................
+    theta = thetaMax - asin(posCamSpace.x / d_xz);
   }
 
-  float rho = asin(posCamSpace.y / d_xy);
+  float rho = asin(posCamSpace.y / d);
 
   float xNew = theta / M_PI;
   float yNew = (r * tan(rho)) / h;
@@ -70,7 +66,6 @@ void main() {
   gl_Position = vec4(xNew, yNew, zNew, 1.0);
   debug = vec3(xNew, yNew, zNew);
   debug = vec3(abs(theta) / M_PI, abs(theta) / M_PI, abs(theta) / M_PI);
-  debug = vec3(abs(rho), abs(rho), abs(rho));
 }
 `;
 
@@ -83,58 +78,13 @@ void main() {
   vec4 texColor = texture2D(tex, vUV);
   gl_FragColor = vec4(texColor.rgb, 1.0);
   // gl_FragColor = vec4(debug.xyz, 1.0);
-  // gl_FragColor = vec4(vUV.xy, debug.x, 1.0);
 }`;
 
 
 
-const texture_nx = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/negx.jpg');
-const texture_ny = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/negy.jpg');
-const texture_nz = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/negz.jpg');
-const texture_px = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/posx.jpg');
-const texture_py = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/posy.jpg');
-const texture_pz = await new TextureLoader().loadAsync('./indoors-skyboxes/DallasW/posz.jpg');
 const textureFace = await new TextureLoader().loadAsync('./indexed-face.png');
 const lowRes = await new TextureLoader().loadAsync('./low-res.png');
 
-
-
-// const skyboxGeometry = new BoxGeometry(10, 2, 15);
-// const skyboxMaterials = [
-//   new ShaderMaterial({ 
-//     vertexShader: vertex, fragmentShader: fragment, 
-//     uniforms: { 'tex': { value: textureFace } },    // texture_px } }, 
-//     side: DoubleSide 
-//   }),
-//   new ShaderMaterial({ 
-//     vertexShader: vertex, fragmentShader: fragment, 
-//     uniforms: { 'tex': { value: textureFace } },    // texture_nx } }, 
-//     side: DoubleSide 
-//   }),
-//   new ShaderMaterial({ 
-//     vertexShader: vertex, fragmentShader: fragment, 
-//     uniforms: { 'tex': { value: textureFace } },    // texture_py } }, 
-//     side: DoubleSide 
-//   }),
-//   new ShaderMaterial({ 
-//     vertexShader: vertex, fragmentShader: fragment, 
-//     uniforms: { 'tex': { value: textureFace } },    // texture_ny } }, 
-//     side: DoubleSide 
-//   }),
-//   new ShaderMaterial({ 
-//     vertexShader: vertex, fragmentShader: fragment, 
-//     uniforms: { 'tex': { value: textureFace } },    // texture_pz } }, 
-//     side: DoubleSide 
-//   }),
-//   new ShaderMaterial({ 
-//     vertexShader: vertex, fragmentShader: fragment, 
-//     uniforms: { 'tex': { value: textureFace } },    // texture_nz } }, 
-//     side: DoubleSide 
-//   }),
-// ]
-// const skybox = new Mesh(skyboxGeometry, skyboxMaterials);
-// skybox.position.set(0, 0, 0);
-// scene.add(skybox);
 
 const plane1 = new Mesh(
   new PlaneGeometry(2, 1, 64, 32),
@@ -169,30 +119,30 @@ const plane3 = new Mesh(
 plane3.position.set(-1, 0, 0);
 plane3.lookAt(new Vector3(0, 0, 0));
 scene.add(plane3);
-const plane4 = new Mesh(
-  new PlaneGeometry(2, 1, 64, 32),
-  new ShaderMaterial({
-    vertexShader: vertex, fragmentShader: fragment,
-    uniforms: { 'tex': {value: textureFace}},
-    side: DoubleSide
-  })
-);
-plane4.position.set(0, 0, -1);
-plane4.lookAt(new Vector3(0, 0, 0));
-scene.add(plane4);
+// const plane4 = new Mesh(
+//   new PlaneGeometry(2, 1, 64, 32),
+//   new ShaderMaterial({
+//     vertexShader: vertex, fragmentShader: fragment,
+//     uniforms: { 'tex': {value: textureFace}},
+//     side: DoubleSide
+//   })
+// );
+// plane4.position.set(0, 0, -1);
+// plane4.lookAt(new Vector3(0, 0, 0));
+// scene.add(plane4);
 
 
 
 const cube = new Mesh(
-  new BoxGeometry(1, 1, 1), 
+  new BoxGeometry(0.2, 0.2, 0.2, 30, 30, 30), 
   new ShaderMaterial({ 
     vertexShader: vertex,
     fragmentShader: fragment,
     uniforms: { 'tex': {value: lowRes} }, 
     side: DoubleSide
   }));
-cube.position.set(0.5, 0, 1.5);
-// scene.add(cube);
+cube.position.set(0.1, 0.2, 0.5);
+scene.add(cube);
 
 
 
