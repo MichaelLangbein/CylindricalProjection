@@ -137,7 +137,7 @@ const lowRes = await new TextureLoader().loadAsync('./low-res.png');
 // scene.add(skybox);
 
 const plane1 = new Mesh(
-  new PlaneGeometry(1, 1, 64, 32),
+  new PlaneGeometry(2, 1, 64, 32),
   new ShaderMaterial({
     vertexShader: vertex, fragmentShader: fragment,
     uniforms: { 'tex': {value: textureFace}},
@@ -148,7 +148,7 @@ plane1.position.set(0, 0, 1);
 plane1.lookAt(new Vector3(0, 0, 0));
 scene.add(plane1);
 const plane2 = new Mesh(
-  new PlaneGeometry(1, 1, 64, 32),
+  new PlaneGeometry(2, 1, 64, 32),
   new ShaderMaterial({
     vertexShader: vertex, fragmentShader: fragment,
     uniforms: { 'tex': {value: textureFace}},
@@ -159,7 +159,7 @@ plane2.position.set(1, 0, 0);
 plane2.lookAt(new Vector3(0, 0, 0));
 scene.add(plane2);
 const plane3 = new Mesh(
-  new PlaneGeometry(1, 1, 64, 32),
+  new PlaneGeometry(2, 1, 64, 32),
   new ShaderMaterial({
     vertexShader: vertex, fragmentShader: fragment,
     uniforms: { 'tex': {value: textureFace}},
@@ -170,7 +170,7 @@ plane3.position.set(-1, 0, 0);
 plane3.lookAt(new Vector3(0, 0, 0));
 scene.add(plane3);
 const plane4 = new Mesh(
-  new PlaneGeometry(1, 1, 64, 32),
+  new PlaneGeometry(2, 1, 64, 32),
   new ShaderMaterial({
     vertexShader: vertex, fragmentShader: fragment,
     uniforms: { 'tex': {value: textureFace}},
