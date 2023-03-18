@@ -1,4 +1,4 @@
-import { BoxGeometry, Camera, DoubleSide, Mesh, PlaneGeometry, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
+import { BackSide, BoxGeometry, Camera, DoubleSide, FrontSide, Mesh, PlaneGeometry, Scene, ShaderMaterial, TextureLoader, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
@@ -27,7 +27,7 @@ varying vec3 debug;
 #define M_PI 3.1415926535897932384626433832795
 
 void main() {
-  float r = 0.3;
+  float r = 1.0;
   float h = 0.6;
   float dmin = r;
   float dmax = 100.0;
@@ -48,13 +48,13 @@ void main() {
 
   float theta = 0.0;
   if (posCamSpace.z > 0.0) {
-    theta = asin(posCamSpace.x / d_xz);
+    theta = asin(posCamSpace.x / d_xz);  // not sure if maybe this should be just d, not d_xz
   } else {
     float thetaMax = M_PI;
     if (posCamSpace.x < 0.0) {
       thetaMax = -1.0 * thetaMax;
     }
-    theta = thetaMax - asin(posCamSpace.x / d_xz);
+    theta = thetaMax - asin(posCamSpace.x / d_xz);  // not sure if maybe this should be just d, not d_xz
   }
 
   float rho = asin(posCamSpace.y / d);
@@ -64,6 +64,7 @@ void main() {
   float zNew = (d - dmin) / (dmax - dmin);
 
   gl_Position = vec4(xNew, yNew, zNew, 1.0);
+
   debug = vec3(xNew, yNew, zNew);
   debug = vec3(abs(theta) / M_PI, abs(theta) / M_PI, abs(theta) / M_PI);
 }
@@ -73,11 +74,13 @@ const fragment = /* glsl */`
 uniform sampler2D tex;
 varying vec2 vUV;
 varying vec3 debug;
+#define M_PI 3.1415926535897932384626433832795
 
 void main() {
   vec4 texColor = texture2D(tex, vUV);
   gl_FragColor = vec4(texColor.rgb, 1.0);
   // gl_FragColor = vec4(debug.xyz, 1.0);
+  // gl_FragColor = vec4(vUV.xy, 0.0, 1.0);
 }`;
 
 
@@ -119,17 +122,31 @@ const plane3 = new Mesh(
 plane3.position.set(-1, 0, 0);
 plane3.lookAt(new Vector3(0, 0, 0));
 scene.add(plane3);
-// const plane4 = new Mesh(
-//   new PlaneGeometry(2, 1, 64, 32),
-//   new ShaderMaterial({
-//     vertexShader: vertex, fragmentShader: fragment,
-//     uniforms: { 'tex': {value: textureFace}},
-//     side: DoubleSide
-//   })
-// );
-// plane4.position.set(0, 0, -1);
-// plane4.lookAt(new Vector3(0, 0, 0));
-// scene.add(plane4);
+// This plane causes trouble:
+// wrapping it around my head from behind
+// makes it smudge over the full screen.
+/**
+ * Here's something fascinating:
+ *  - this wall is not displayed if there is only one length- and height-section.
+ *  - Reason: when the projection moves the furthest-left vertex to the furthest right,
+ *    the triangle is turned from a right-handed triangle into a left-handed triangle.
+ *    And WebGL just doesn't render left-handed triangles... even if they are double sided
+ *    (I think!)
+ * - Either way, the wrap-around does seem to work with the following ingredients:
+ *  - uneven with- and height-sections (this way only one section is becoming de-naturated and un-renderable.)
+ *  - FrontSide-rendering only (as long as the plane looks towards the camera)
+ */
+const plane4 = new Mesh(
+  new PlaneGeometry(2, 1, 9, 9),
+  new ShaderMaterial({
+    vertexShader: vertex, fragmentShader: fragment,
+    uniforms: { 'tex': {value: lowRes}},
+    side: FrontSide
+  })
+);
+plane4.position.set(0, 0, -1);
+plane4.lookAt(new Vector3(0, 0, 0));
+scene.add(plane4);
 
 
 
